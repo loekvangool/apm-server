@@ -4,10 +4,10 @@
 
 apm-server:
   # Defines the host and port the server is listening on. Use "unix:/path/to.sock" to listen on a unix domain socket.
-  host: "localhost:8200"
+  host: "rum.chefstore.nl:8200"
 
   # Agent authorization configuration. If no methods are defined, all requests will be allowed.
-  #auth:
+  auth:
     # Agent authorization using Elasticsearch API Keys.
     #api_key:
       #enabled: false
@@ -17,7 +17,7 @@ apm-server:
       #limit: 100
 
     # Define a shared secret token for authorizing agents using the "Bearer" authorization method.
-    #secret_token:
+    secret_token: trekpopbierslet
 
     # Allow anonymous access only for specified agents and/or services. This is primarily intended to allow
     # limited access for untrusted agents, such as Real User Monitoring.
@@ -95,16 +95,16 @@ apm-server:
   #---------------------------- APM Server - Secure Communication with Agents ----------------------------
 
   # Enable secure communication between APM agents and the server. By default ssl is disabled.
-  #ssl:
-    #enabled: false
+  ssl:
+    enabled: true
 
     # Path to file containing the certificate for server authentication.
     # Needs to be configured when ssl is enabled.
-    #certificate: ''
+    certificate: '/etc/letsencrypt/live/rum.chefstore.nl/fullchain.pem'
 
     # Path to file containing server certificate key.
     # Needs to be configured when ssl is enabled.
-    #key: ''
+    key: '/etc/letsencrypt/live/rum.chefstore.nl/privkey.pem'
 
     # Optional configuration options for ssl communication.
 
@@ -113,7 +113,8 @@ apm-server:
     #key_passphrase: ''
 
     # List of supported/valid protocol versions. By default TLS versions 1.1 up to 1.3 are enabled.
-    #supported_protocols: [TLSv1.1, TLSv1.2, TLSv1.3]
+    # Disabled 1.3: https://discuss.elastic.co/t/http-tls-handshake-error-from-x-x-x-x-xxxx-eof/229414/2
+    supported_protocols: [TLSv1.1, TLSv1.2]
 
     # Configure cipher suites to be used for SSL connections.
     # Note that cipher suites are not configurable for TLS 1.3.
@@ -122,13 +123,18 @@ apm-server:
     # Configure curve types for ECDHE based cipher suites.
     #curve_types: []
 
+    # Configure SSL verification mode. If `none` is configured, all hosts and
+    # certificates will be accepted. In this mode, SSL-based connections are
+    # susceptible to man-in-the-middle attacks. Use only for testing. Default is `full`.
+    ssl.verification_mode: none
+
   #---------------------------- APM Server - RUM Real User Monitoring ----------------------------
 
   # Enable Real User Monitoring (RUM) Support. By default RUM is disabled.
   # RUM does not support token based authorization. Enabled RUM endpoints will not require any authorization
   # token configured for other endpoints.
-  #rum:
-    #enabled: false
+  rum:
+    enabled: true
 
     #-- General RUM settings
 
@@ -137,7 +143,7 @@ apm-server:
     # An origin is made of a protocol scheme, host and port, without the url path.
     # Allowed origins in this setting can have * to match anything (eg.: http://*.example.com)
     # If an item in the list is a single '*', everything will be allowed.
-    #allow_origins: ['*']
+    allow_origins : ['https://dev.chefstore.nl','https://www.chefstore.nl']
 
     # A list of Access-Control-Allow-Headers to allow RUM requests, in addition to "Content-Type",
     # "Content-Encoding", and "Accept"
@@ -158,10 +164,10 @@ apm-server:
 
     # If a source map has previously been uploaded, source mapping is automatically applied.
     # to all error and transaction documents sent to the RUM endpoint.
-    #source_mapping:
+    source_mapping:
 
       # Sourcemapping is enabled by default.
-      #enabled: true
+      enabled: false
 
       # Timeout for fetching source maps.
       #timeout: 5s
@@ -202,19 +208,19 @@ apm-server:
   # Specify cache key expiration via this setting. Default is 30 seconds.
   #agent.config.cache.expiration: 30s
 
-  #kibana:
+  kibana:
     # Enabled must be true to enable APM Agent configuration, and for fetching source maps uploaded through Kibana.
-    #enabled: false
+    enabled: true
 
     # Scheme and port can be left out and will be set to the default (`http` and `5601`).
     # In case you specify an additional path, the scheme is required: `http://localhost:5601/path`.
     # IPv6 addresses should always be defined as: `https://[2001:db8::1]:5601`.
-    #host: "localhost:5601"
+    host: "kibana.prokoeling.nl:5601"
 
     # Optional protocol and basic auth credentials.
-    #protocol: "https"
-    #username: "elastic"
-    #password: "changeme"
+    protocol: "https"
+    username: "elastic"
+    password: "m!0sg|R'Ew+6"
 
     # Optional HTTP path.
     #path: ""
@@ -289,7 +295,7 @@ apm-server:
 
 # Sets the maximum number of CPUs that can be executing simultaneously. The
 # default is the number of logical CPUs available in the system.
-#max_procs:
+max_procs: 1
 
 #============================= Elastic Cloud =============================
 
@@ -313,21 +319,21 @@ output.elasticsearch:
   # Scheme and port can be left out and will be set to the default (`http` and `9200`).
   # In case you specify and additional path, the scheme is required: `http://localhost:9200/path`.
   # IPv6 addresses should always be defined as: `https://[2001:db8::1]:9200`.
-  hosts: ["localhost:9200"]
+  hosts: ["https://elasticsearch.prokoeling.nl:9200"]
 
   # Boolean flag to enable or disable the output module.
-  #enabled: true
+  enabled: true
 
   # Set gzip compression level.
-  #compression_level: 0
+  compression_level: 0
 
   # Protocol - either `http` (default) or `https`.
-  #protocol: "https"
+  protocol: "https"
 
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
-  #username: "elastic"
-  #password: "changeme"
+  username: "beats_indexer"
+  password: "7^xcUHgh6KXMnuOdjU9!1oQmq"
 
   # Dictionary of HTTP parameters to pass within the url with index operations.
   #parameters:
@@ -390,7 +396,7 @@ output.elasticsearch:
   # after very careful consideration. It is primarily intended as a temporary
   # diagnostic mechanism when attempting to resolve TLS errors; its use in
   # production environments is strongly discouraged.
-  #ssl.verification_mode: full
+  ssl.verification_mode: none
 
   # List of supported/valid TLS versions. By default all TLS versions 1.0 up to
   # 1.2 are enabled.
@@ -809,7 +815,7 @@ output.elasticsearch:
 
 # Sets the minimum log level. The default log level is info.
 # Available log levels are: error, warning, info, or debug.
-#logging.level: info
+logging.level: warning
 
 # Enable debug output for selected components. To enable all selectors use ["*"].
 # Other available selectors are "beat", "publish", or "service".
@@ -817,7 +823,7 @@ output.elasticsearch:
 #logging.selectors: [ ]
 
 # Send all logging output to syslog. The default is false.
-#logging.to_syslog: true
+logging.to_syslog: false
 
 # If enabled, apm-server periodically logs its internal metrics that have changed
 # in the last period. For each metric that changed, the delta from the value at
@@ -830,32 +836,32 @@ output.elasticsearch:
 
 # Logging to rotating files. When true, writes all logging output to files.
 # The log files are automatically rotated when the log file size limit is reached.
-#logging.to_files: true
-#logging.files:
+logging.to_files: true
+logging.files:
   # Configure the path where the logs are written. The default is the logs directory
   # under the home path (the binary location).
-  #path: /var/log/apm-server
+  path: /var/log/apm-server
 
   # The name of the files where the logs are written to.
-  #name: apm-server
+  name: apm-server
 
   # Configure log file size limit. If limit is reached, log file will be
   # automatically rotated.
-  #rotateeverybytes: 10485760 # = 10MB
+  rotateeverybytes: 10485760 # = ~10MB
 
   # Number of rotated log files to keep. Oldest files will be deleted first.
-  #keepfiles: 7
+  keepfiles: 7
 
   # The permissions mask to apply when rotating log files. The default value is 0600.
   # Must be a valid Unix-style file permissions mask expressed in octal notation.
-  #permissions: 0600
+  permissions: 0600
 
   # Enable log file rotation on time intervals in addition to size-based rotation.
   # Intervals must be at least 1s. Values of 1m, 1h, 24h, 7*24h, 30*24h, and 365*24h
   # are boundary-aligned with minutes, hours, days, weeks, months, and years as
   # reported by the local system clock. All other intervals are calculated from the
   # Unix epoch. Defaults to disabled.
-  #interval: 0
+  interval: 24h
 
 #=============================== HTTP Endpoint ===============================
 
@@ -865,13 +871,13 @@ output.elasticsearch:
 # append ?pretty to the URL.
 
 # Defines if the HTTP endpoint is enabled.
-#http.enabled: false
+http.enabled: true
 
 # The HTTP endpoint will bind to this hostname or IP address. It is recommended to use only localhost.
 #http.host: localhost
 
 # Port on which the HTTP endpoint will bind. Default is 5066.
-#http.port: 5066
+http.port: 5070
 
 #============================= X-pack Monitoring =============================
 
